@@ -230,10 +230,10 @@ function HomeSkeleton() {
 function TeachBand() {
   return (
     <section className="container-page pt-20">
-      <div className="relative overflow-hidden rounded-3xl bg-fg px-6 py-12 text-bg sm:px-12">
+      <div className="relative overflow-hidden rounded-3xl bg-ink px-6 py-12 text-paper sm:px-12">
         <div className="relative z-10 max-w-xl">
           <h2 className="font-display text-3xl font-semibold sm:text-4xl">Know something worth teaching?</h2>
-          <p className="mt-3 leading-relaxed opacity-80">
+          <p className="mt-3 leading-relaxed text-paper-muted">
             Publish video lessons, articles, documents and quizzes. Set your own price, and keep the larger share of
             every sale.
           </p>
@@ -243,7 +243,7 @@ function TeachBand() {
         </div>
         <svg aria-hidden viewBox="0 0 300 300" className="absolute -right-10 -bottom-24 hidden h-96 w-96 md:block">
           <circle cx="150" cy="150" r="150" fill="var(--brand)" />
-          <circle cx="150" cy="150" r="92" fill="var(--fg)" />
+          <circle cx="150" cy="150" r="92" fill="var(--ink)" />
           <circle cx="150" cy="150" r="40" fill="var(--brand)" />
         </svg>
       </div>

@@ -24,8 +24,8 @@ export function ForgotPasswordForm() {
       onSuccess={(r) => setSent(r.message ?? "If an account exists for that email, a reset link is on its way.")}
       className="flex flex-col gap-4"
     >
-      <Field label="Email" htmlFor="email">
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+      <Field label="Email">
+        <Input name="email" type="email" autoComplete="email" required />
         <FieldError name="email" />
       </Field>
       <SubmitButton size="lg" className="mt-2 w-full" pendingLabel="Sending…">

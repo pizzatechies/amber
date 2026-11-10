@@ -31,6 +31,12 @@
   --warn: #8a5a00;
   --warn-soft: #fcf1cf;
 
+  /* "Inverse" surfaces that stay dark in both themes (hero bands, the player). */
+  --ink: #1d1a16;
+  --ink-2: #2b2620;
+  --paper: #faf7f2;
+  --paper-muted: #c9bfb0;
+
   --focus: #a35600;
   --overlay: rgb(29 26 22 / 0.55);
   --shadow-color: 60 40 10;
@@ -64,6 +70,11 @@
     --warn: #f0c35a;
     --warn-soft: #382d0f;
 
+    --ink: #0d0b09;
+    --ink-2: #1e1a16;
+    --paper: #f4efe7;
+    --paper-muted: #bdb1a1;
+
     --focus: #f7b84a;
     --overlay: rgb(0 0 0 / 0.65);
     --shadow-color: 0 0 0;
@@ -96,6 +107,11 @@
   --color-info-soft: var(--info-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-paper: var(--paper);
+  --color-paper-muted: var(--paper-muted);
 
   --color-focus: var(--focus);
   --color-overlay: var(--overlay);

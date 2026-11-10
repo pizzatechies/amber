@@ -5,6 +5,7 @@ import {
   use,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -49,6 +50,9 @@ export function Dropdown({
     document.addEventListener("pointerdown", onPointer);
     return () => document.removeEventListener("pointerdown", onPointer);
   }, [open]);
+
+  // Pages stay mounted (hidden) after navigating away; don't come back to an open menu.
+  useLayoutEffect(() => () => setOpen(false), []);
 
   const items = () => Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
 

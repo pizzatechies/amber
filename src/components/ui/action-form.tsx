@@ -7,6 +7,7 @@ import {
   useActionState,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useTransition,
@@ -14,6 +15,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import type { ActionResult, FormAction, FormState } from "@/lib/action-types";
 import { Button } from "./button";
@@ -36,12 +38,18 @@ export function ActionForm({
   className,
   onSuccess,
   resetOnSuccess,
+  resetOnHide,
   toastSuccess = true,
   ...props
 }: Omit<ComponentProps<"form">, "action" | "onSubmit"> & {
   action: FormAction;
   onSuccess?: (result: Extract<ActionResult<unknown>, { ok: true }>) => void;
   resetOnSuccess?: boolean;
+  /**
+   * Clear the fields when the user navigates away. Next.js keeps recently
+   * visited pages mounted but hidden; use this for forms that hold secrets.
+   */
+  resetOnHide?: boolean;
   /** Toast the action's success message. On by default. */
   toastSuccess?: boolean;
 }) {
@@ -51,6 +59,12 @@ export function ActionForm({
   useEffect(() => {
     onSuccessRef.current = onSuccess;
   });
+
+  useLayoutEffect(() => {
+    if (!resetOnHide) return;
+    const form = formRef.current;
+    return () => form?.reset();
+  }, [resetOnHide]);
 
   // Field errors that no <FieldError> in the form is showing; listed at the top instead.
   const [unclaimed, setUnclaimed] = useState<string[]>([]);
@@ -152,7 +166,9 @@ export function useServerAction<Args extends unknown[], T>(
         let result: ActionResult<T>;
         try {
           result = await action(...args);
-        } catch {
+        } catch (err) {
+          // An action that redirects rejects with Next.js's redirect signal: let the router handle it.
+          unstable_rethrow(err);
           result = { ok: false, error: "Could not reach the server. Check your connection and try again." };
         }
         if (result.ok) {

@@ -30,17 +30,21 @@ export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElem
   return <label className={cn("text-sm font-semibold text-fg", className)} {...props} />;
 }
 
-/** Label + control + optional hint. Pair with <FieldError name="..."/> for validation messages. */
+/**
+ * Label + control + optional hint. The control is nested inside the <label>,
+ * so the two are associated without an id. That matters here: Next.js keeps
+ * recently visited pages in the DOM (hidden), so ids such as "email" would
+ * exist twice and a `for="email"` label could point at the hidden copy.
+ * Put a <FieldError name="..."/> after the control for validation messages.
+ */
 export function Field({
   label,
-  htmlFor,
   hint,
   optional,
   children,
   className,
 }: {
   label: ReactNode;
-  htmlFor?: string;
   hint?: ReactNode;
   optional?: boolean;
   children: ReactNode;
@@ -48,11 +52,13 @@ export function Field({
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="flex items-baseline justify-between gap-2">
-        <Label htmlFor={htmlFor}>{label}</Label>
-        {optional ? <span className="text-xs text-subtle">Optional</span> : null}
-      </div>
-      {children}
+      <label className="flex flex-col gap-1.5">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="text-sm font-semibold text-fg">{label}</span>
+          {optional ? <span className="text-xs font-normal text-subtle">Optional</span> : null}
+        </span>
+        {children}
+      </label>
       {hint ? <p className="text-xs leading-relaxed text-muted">{hint}</p> : null}
     </div>
   );

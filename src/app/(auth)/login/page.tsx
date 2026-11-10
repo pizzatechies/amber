@@ -37,14 +37,14 @@ async function LoginForm({ searchParams }: Pick<PageProps<"/login">, "searchPara
   if (await getCurrentUser()) redirect(next);
 
   return (
-    <ActionForm action={signInAction} className="flex flex-col gap-4">
+    <ActionForm action={signInAction} resetOnHide className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
-      <Field label="Email" htmlFor="email">
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+      <Field label="Email">
+        <Input name="email" type="email" autoComplete="email" required />
         <FieldError name="email" />
       </Field>
-      <Field label="Password" htmlFor="password">
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
+      <Field label="Password">
+        <Input name="password" type="password" autoComplete="current-password" required />
         <FieldError name="password" />
       </Field>
       <SubmitButton size="lg" className="mt-2 w-full" pendingLabel="Logging in…">

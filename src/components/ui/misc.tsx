@@ -215,20 +215,26 @@ export function Pagination({
   pageCount,
   basePath,
   params,
+  pageParam = "page",
+  hash,
 }: {
   page: number;
   pageCount: number;
   basePath: string;
   params?: Record<string, string | undefined>;
+  /** Name of the query parameter that carries the page number. */
+  pageParam?: string;
+  /** Element id to scroll to after navigating. */
+  hash?: string;
 }) {
   if (pageCount <= 1) return null;
 
   const href = (p: number) => {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params ?? {})) if (v) qs.set(k, v);
-    if (p > 1) qs.set("page", String(p));
+    if (p > 1) qs.set(pageParam, String(p));
     const s = qs.toString();
-    return s ? `${basePath}?${s}` : basePath;
+    return (s ? `${basePath}?${s}` : basePath) + (hash ? `#${hash}` : "");
   };
 
   const pages = new Set<number>([1, pageCount, page - 1, page, page + 1]);

@@ -17,7 +17,7 @@ export function formatMoney(minor: number, currency: string = site.currency): st
     return new Intl.NumberFormat("en", {
       style: "currency",
       currency,
-      minimumFractionDigits: Number.isInteger(value) ? 0 : digits,
+      minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     }).format(value);
   } catch {

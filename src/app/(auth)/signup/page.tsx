@@ -39,19 +39,18 @@ async function SignupForm({ searchParams }: Pick<PageProps<"/signup">, "searchPa
   if (await getCurrentUser()) redirect(next);
 
   return (
-    <ActionForm action={signUpAction} className="flex flex-col gap-4">
+    <ActionForm action={signUpAction} resetOnHide className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
-      <Field label="Full name" htmlFor="name">
-        <Input id="name" name="name" autoComplete="name" required maxLength={80} />
+      <Field label="Full name">
+        <Input name="name" autoComplete="name" required maxLength={80} />
         <FieldError name="name" />
       </Field>
-      <Field label="Email" htmlFor="email">
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+      <Field label="Email">
+        <Input name="email" type="email" autoComplete="email" required />
         <FieldError name="email" />
       </Field>
-      <Field label="Password" htmlFor="password" hint={`At least ${PASSWORD_MIN_LENGTH} characters.`}>
+      <Field label="Password" hint={`At least ${PASSWORD_MIN_LENGTH} characters.`}>
         <Input
-          id="password"
           name="password"
           type="password"
           autoComplete="new-password"

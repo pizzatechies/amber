@@ -74,7 +74,14 @@ export function UserMenu({ user }: { user: MenuUser }) {
         <Settings /> Account settings
       </DropdownLink>
       <DropdownSeparator />
-      <DropdownButton onSelect={() => startTransition(() => signOutAction())}>
+      <DropdownButton
+        onSelect={() =>
+          startTransition(async () => {
+            await signOutAction();
+            window.location.assign("/");
+          })
+        }
+      >
         <LogOut /> Sign out
       </DropdownButton>
     </Dropdown>

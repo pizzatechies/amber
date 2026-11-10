@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { LoaderCircle, X } from "lucide-react";
 import type { ActionResult } from "@/lib/action-types";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,14 @@ export function Dialog({
     if (open && !el.open) el.showModal();
     if (!open && el.open) el.close();
   }, [open]);
+
+  // Pages stay mounted (hidden) after navigating away; don't come back to an open dialog.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    return () => {
+      if (el?.open) el.close();
+    };
+  }, []);
 
   const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" } as const;
 

@@ -87,9 +87,12 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   });
 }
 
+/**
+ * The client follows this with a full page load (see UserMenu) rather than a
+ * client-side redirect, so no preserved page keeps showing the old session.
+ */
 export async function signOutAction(): Promise<void> {
   await destroySession();
-  redirect("/");
 }
 
 const forgotSchema = z.object({ email: emailSchema });

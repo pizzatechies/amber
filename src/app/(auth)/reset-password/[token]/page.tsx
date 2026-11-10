@@ -45,11 +45,10 @@ async function ResetForm({ params }: Pick<PageProps<"/reset-password/[token]">, 
   }
 
   return (
-    <ActionForm action={resetPasswordAction} className="flex flex-col gap-4">
+    <ActionForm action={resetPasswordAction} resetOnHide className="flex flex-col gap-4">
       <input type="hidden" name="token" value={token} />
-      <Field label="New password" htmlFor="password" hint={`At least ${PASSWORD_MIN_LENGTH} characters.`}>
+      <Field label="New password" hint={`At least ${PASSWORD_MIN_LENGTH} characters.`}>
         <Input
-          id="password"
           name="password"
           type="password"
           autoComplete="new-password"
