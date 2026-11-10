@@ -341,3 +341,18 @@
 .prose input[type="checkbox"] {
   margin-right: 0.4em;
 }
+
+/* ───────────── Print (certificates) ───────────── */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+  body {
+    background: #fff;
+  }
+  .certificate {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

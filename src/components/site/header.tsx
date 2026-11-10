@@ -121,7 +121,7 @@ function HeaderAccountFallback() {
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md print:hidden">
       <div className="container-page flex h-16 items-center gap-2 sm:gap-4">
         <Logo />
         <Link href="/courses" className={`${navLink} hidden md:inline-flex`}>
