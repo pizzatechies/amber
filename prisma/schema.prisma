@@ -1,0 +1,549 @@
+// Amber data model. PostgreSQL only.
+// After editing run:  npx prisma migrate dev --name <change>
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Accounts ─────────────────────────────
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String     @id @default(cuid(2))
+  email         String     @unique
+  passwordHash  String
+  name          String
+  role          Role       @default(STUDENT)
+  status        UserStatus @default(ACTIVE)
+  headline      String     @default("")
+  bio           String     @default("")
+  websiteUrl    String     @default("")
+  avatarAssetId String?    @unique
+  avatar        Asset?     @relation("UserAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  sessions       Session[]
+  passwordResets PasswordResetToken[]
+  assets         Asset[]              @relation("AssetOwner")
+  courses        Course[]
+  enrollments    Enrollment[]
+  progress       LectureProgress[]
+  quizAttempts   QuizAttempt[]
+  reviews        Review[]
+  questions      Question[]
+  answers        Answer[]
+  notes          Note[]
+  wishlist       WishlistItem[]
+  cart           CartItem[]
+  orders         Order[]
+  certificates   Certificate[]
+  notifications  Notification[]
+  announcements  Announcement[]
+}
+
+model Session {
+  id         String   @id @default(cuid(2))
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent  String   @default("")
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid(2))
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@index([userId])
+}
+
+// ───────────────────────────── Files ─────────────────────────────
+
+enum AssetKind {
+  IMAGE
+  VIDEO
+  FILE
+}
+
+enum AssetStatus {
+  UPLOADING
+  READY
+}
+
+/// A stored file. Bytes live in the storage driver (local disk or S3);
+/// this row is the source of truth for ownership and access.
+model Asset {
+  id            String      @id @default(cuid(2))
+  ownerId       String
+  owner         User        @relation("AssetOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  kind          AssetKind
+  status        AssetStatus @default(UPLOADING)
+  storageKey    String      @unique
+  filename      String
+  mimeType      String
+  sizeBytes     BigInt
+  uploadedBytes BigInt      @default(0)
+  /// Multipart upload id when the storage driver needs one (S3).
+  uploadId      String      @default("")
+  durationSec   Int         @default(0)
+  /// Public assets (avatars, course thumbnails) are readable by anyone.
+  isPublic      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  avatarOf    User?            @relation("UserAvatar")
+  thumbnailOf Course?          @relation("CourseThumbnail")
+  promoOf     Course?          @relation("CoursePromo")
+  lecture     Lecture?         @relation("LectureMedia")
+  resource    LectureResource?
+
+  @@index([ownerId])
+  @@index([status, createdAt])
+}
+
+// ───────────────────────────── Catalog ─────────────────────────────
+
+model Category {
+  id          String   @id @default(cuid(2))
+  name        String   @unique
+  slug        String   @unique
+  description String   @default("")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  courses     Course[]
+}
+
+enum CourseStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  REJECTED
+  UNPUBLISHED
+}
+
+enum CourseLevel {
+  ALL_LEVELS
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model Course {
+  id               String       @id @default(cuid(2))
+  slug             String       @unique
+  title            String
+  subtitle         String       @default("")
+  /// Markdown.
+  description      String       @default("")
+  language         String       @default("English")
+  level            CourseLevel  @default(ALL_LEVELS)
+  categoryId       String?
+  category         Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  instructorId     String
+  instructor       User         @relation(fields: [instructorId], references: [id])
+  /// Price in minor units of the site currency. 0 means free.
+  priceCents       Int          @default(0)
+  outcomes         String[]
+  requirements     String[]
+  audience         String[]
+  thumbnailAssetId String?      @unique
+  thumbnail        Asset?       @relation("CourseThumbnail", fields: [thumbnailAssetId], references: [id], onDelete: SetNull)
+  promoAssetId     String?      @unique
+  promo            Asset?       @relation("CoursePromo", fields: [promoAssetId], references: [id], onDelete: SetNull)
+  status           CourseStatus @default(DRAFT)
+  /// Feedback from the last admin review.
+  reviewNote       String       @default("")
+  submittedAt      DateTime?
+  publishedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Denormalised counters, maintained by src/lib/courses/stats.ts
+  ratingAvg       Float @default(0)
+  ratingCount     Int   @default(0)
+  enrollmentCount Int   @default(0)
+  lectureCount    Int   @default(0)
+  durationSec     Int   @default(0)
+
+  sections      Section[]
+  lectures      Lecture[]
+  enrollments   Enrollment[]
+  progress      LectureProgress[]
+  reviews       Review[]
+  questions     Question[]
+  notes         Note[]
+  wishlistedBy  WishlistItem[]
+  inCarts       CartItem[]
+  coupons       Coupon[]
+  orderItems    OrderItem[]
+  certificates  Certificate[]
+  announcements Announcement[]
+
+  @@index([status, publishedAt])
+  @@index([status, enrollmentCount])
+  @@index([instructorId])
+  @@index([categoryId])
+}
+
+model Section {
+  id        String    @id @default(cuid(2))
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+  lectures  Lecture[]
+
+  @@index([courseId, position])
+}
+
+enum LectureType {
+  VIDEO
+  ARTICLE
+  DOCUMENT
+  QUIZ
+}
+
+model Lecture {
+  id           String      @id @default(cuid(2))
+  courseId     String
+  course       Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sectionId    String
+  section      Section     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  title        String
+  type         LectureType
+  position     Int         @default(0)
+  /// Free preview: watchable without enrolling.
+  isPreview    Boolean     @default(false)
+  /// True once the lecture has content. Only ready lectures are shown to students.
+  isReady      Boolean     @default(false)
+  /// Uploaded video (VIDEO) or document (DOCUMENT).
+  mediaAssetId String?     @unique
+  media        Asset?      @relation("LectureMedia", fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  /// External video link (YouTube / Vimeo) as an alternative to an upload.
+  videoUrl     String      @default("")
+  durationSec  Int         @default(0)
+  /// Markdown. The article body, or optional notes shown under a video/document.
+  content      String      @default("")
+  /// Quiz definition, see src/lib/courses/quiz.ts for the shape.
+  quiz         Json?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  resources    LectureResource[]
+  progress     LectureProgress[]
+  quizAttempts QuizAttempt[]
+  questions    Question[]
+  notes        Note[]
+
+  @@index([sectionId, position])
+  @@index([courseId])
+}
+
+/// A downloadable file or link attached to a lecture.
+model LectureResource {
+  id        String   @id @default(cuid(2))
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  title     String
+  assetId   String?  @unique
+  asset     Asset?   @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  url       String   @default("")
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([lectureId, position])
+}
+
+// ───────────────────────────── Learning ─────────────────────────────
+
+enum EnrollmentSource {
+  FREE
+  PURCHASE
+  GRANT
+}
+
+model Enrollment {
+  id             String           @id @default(cuid(2))
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId       String
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  source         EnrollmentSource
+  createdAt      DateTime         @default(now())
+  lastLectureId  String?
+  lastAccessedAt DateTime?
+  completedAt    DateTime?
+  /// Set when access is withdrawn (refund). The row is kept for history.
+  revokedAt      DateTime?
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId, lastAccessedAt])
+}
+
+model LectureProgress {
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lectureId   String
+  lecture     Lecture   @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  positionSec Int       @default(0)
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@id([userId, lectureId])
+  @@index([userId, courseId])
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid(2))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  correct   Int
+  total     Int
+  /// { [questionId]: optionId[] }
+  answers   Json
+  createdAt DateTime @default(now())
+
+  @@index([userId, lectureId, createdAt])
+}
+
+model Review {
+  id        String    @id @default(cuid(2))
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String    @default("")
+  /// Instructor's public reply.
+  reply     String    @default("")
+  repliedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId, createdAt])
+}
+
+model Question {
+  id         String   @id @default(cuid(2))
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lectureId  String?
+  lecture    Lecture? @relation(fields: [lectureId], references: [id], onDelete: SetNull)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  body       String   @default("")
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  answers    Answer[]
+
+  @@index([courseId, createdAt])
+}
+
+model Answer {
+  id         String   @id @default(cuid(2))
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([questionId, createdAt])
+}
+
+model Note {
+  id          String   @id @default(cuid(2))
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lectureId   String
+  lecture     Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  positionSec Int      @default(0)
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, courseId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid(2))
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([courseId, createdAt])
+}
+
+model Certificate {
+  id             String   @id @default(cuid(2))
+  /// Public verification code printed on the certificate.
+  code           String   @unique
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId       String?
+  course         Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  // Snapshots, so a certificate stays valid if names change later.
+  recipientName  String
+  courseTitle    String
+  instructorName String
+  issuedAt       DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+// ───────────────────────────── Commerce ─────────────────────────────
+
+model WishlistItem {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, courseId])
+}
+
+model CartItem {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  couponId  String?
+  coupon    Coupon?  @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@id([userId, courseId])
+}
+
+/// A discount code an instructor creates for one of their courses.
+model Coupon {
+  id              String     @id @default(cuid(2))
+  courseId        String
+  course          Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  code            String
+  percentOff      Int
+  maxRedemptions  Int?
+  redemptionCount Int        @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  cartItems       CartItem[]
+
+  @@unique([courseId, code])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+  REFUNDED
+}
+
+model Order {
+  id            String      @id @default(cuid(2))
+  /// Human-friendly order number.
+  number        Int         @unique @default(autoincrement())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  status        OrderStatus @default(PENDING)
+  currency      String
+  subtotalCents Int
+  discountCents Int         @default(0)
+  totalCents    Int
+  /// Payment provider id ("sandbox", "stripe", or "none" for zero-total orders).
+  provider      String
+  /// Provider-side reference (e.g. Stripe Checkout Session id).
+  providerRef   String      @default("")
+  createdAt     DateTime    @default(now())
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  items         OrderItem[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([provider, providerRef])
+}
+
+model OrderItem {
+  id                   String  @id @default(cuid(2))
+  orderId              String
+  order                Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courseId             String?
+  course               Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  instructorId         String
+  /// Course title at the time of purchase.
+  title                String
+  listPriceCents       Int
+  priceCents           Int
+  couponId             String?
+  couponCode           String  @default("")
+  /// The instructor's cut of priceCents, fixed at purchase time.
+  instructorShareCents Int
+
+  @@index([orderId])
+  @@index([instructorId])
+  @@index([courseId])
+}
+
+// ───────────────────────────── Platform ─────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid(2))
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String    @default("")
+  href      String    @default("")
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+/// Key/value platform settings edited from the admin console.
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

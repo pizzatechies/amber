@@ -1,0 +1,327 @@
+@import "tailwindcss";
+
+/* ───────────── Design tokens ─────────────
+   Warm paper, ink text, amber accent. Dark mode follows the system setting. */
+:root {
+  color-scheme: light dark;
+
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface-2: #f3eee6;
+  --surface-3: #e9e2d6;
+  --line: #e4dccf;
+  --line-strong: #cbc0ae;
+  --fg: #1d1a16;
+  --fg-muted: #5f574c;
+  --fg-subtle: #776d60;
+
+  --brand: #f2a31b;
+  --brand-hover: #e39511;
+  --brand-ink: #1d1a16;
+  --brand-soft: #fcefd2;
+  --brand-text: #a35600;
+
+  --success: #1a7548;
+  --success-soft: #e2f3e9;
+  --danger: #b42318;
+  --danger-soft: #fce8e5;
+  --danger-solid: #b42318;
+  --info: #1b5a9e;
+  --info-soft: #e3edfa;
+  --warn: #8a5a00;
+  --warn-soft: #fcf1cf;
+
+  --focus: #a35600;
+  --overlay: rgb(29 26 22 / 0.55);
+  --shadow-color: 60 40 10;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15120f;
+    --surface: #1e1a16;
+    --surface-2: #29231d;
+    --surface-3: #362e25;
+    --line: #3a3229;
+    --line-strong: #5a4e40;
+    --fg: #f4efe7;
+    --fg-muted: #bdb1a1;
+    --fg-subtle: #9a8e7e;
+
+    --brand: #f5ab2e;
+    --brand-hover: #ffbe4d;
+    --brand-ink: #1d1a16;
+    --brand-soft: #3b2d11;
+    --brand-text: #f7b84a;
+
+    --success: #62d39c;
+    --success-soft: #142f22;
+    --danger: #ff8f80;
+    --danger-soft: #3c1a16;
+    --danger-solid: #c5362c;
+    --info: #86b9f0;
+    --info-soft: #14273d;
+    --warn: #f0c35a;
+    --warn-soft: #382d0f;
+
+    --focus: #f7b84a;
+    --overlay: rgb(0 0 0 / 0.65);
+    --shadow-color: 0 0 0;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-subtle: var(--fg-subtle);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-text: var(--brand-text);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-solid: var(--danger-solid);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --color-focus: var(--focus);
+  --color-overlay: var(--overlay);
+
+  --font-sans: var(--font-figtree), var(--font-figtree-ext), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), var(--font-fraunces-ext), ui-serif, Georgia, "Times New Roman", serif;
+
+  --shadow-card: 0 1px 2px rgb(var(--shadow-color) / 0.06), 0 6px 20px rgb(var(--shadow-color) / 0.07);
+  --shadow-pop: 0 2px 6px rgb(var(--shadow-color) / 0.1), 0 16px 40px rgb(var(--shadow-color) / 0.16);
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-rise: rise 0.18s ease-out;
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01";
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* Tailwind v4 resets button cursors; interactive things should feel clickable. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for],
+  select {
+    cursor: pointer;
+  }
+
+  dialog::backdrop {
+    background: var(--overlay);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 2rem;
+  }
+}
+
+/* ───────────── Rendered Markdown ───────────── */
+.prose {
+  color: var(--fg);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.prose > :first-child {
+  margin-top: 0;
+}
+.prose > :last-child {
+  margin-bottom: 0;
+}
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose pre,
+.prose table {
+  margin-block: 1em;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+}
+.prose h1 {
+  font-size: 1.6rem;
+}
+.prose h2 {
+  font-size: 1.35rem;
+}
+.prose h3 {
+  font-size: 1.15rem;
+}
+.prose h4 {
+  font-size: 1rem;
+}
+.prose ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.prose ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.prose li {
+  margin-block: 0.3em;
+}
+.prose li > ul,
+.prose li > ol {
+  margin-block: 0.3em;
+}
+.prose a {
+  color: var(--brand-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose strong {
+  font-weight: 650;
+}
+.prose blockquote {
+  border-left: 3px solid var(--brand);
+  padding-left: 1em;
+  color: var(--fg-muted);
+}
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.1em 0.35em;
+}
+.prose pre {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  line-height: 1.55;
+}
+.prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.875em;
+}
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin-block: 2em;
+}
+.prose img {
+  max-width: 100%;
+  border-radius: 10px;
+}
+.prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.925em;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--line);
+  padding: 0.45em 0.75em;
+  text-align: left;
+}
+.prose th {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+.prose input[type="checkbox"] {
+  margin-right: 0.4em;
+}
