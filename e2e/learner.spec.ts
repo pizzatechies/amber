@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { field, signUp } from "./helpers";
 
-const PAID = "/courses/web-development-foundations-html-css-and-javascript";
-const FREE_SLUG = "version-control-with-git-in-one-afternoon";
+const PAID = "/courses/leading-teams-your-first-90-days-as-a-manager";
+const FREE_SLUG = "giving-feedback-that-lands";
 
 test("visitors can browse, search and preview without an account", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Popular right now" })).toBeVisible();
 
-  await page.goto("/courses?q=sql");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("sql");
-  await expect(page.getByRole("link", { name: "Practical SQL for Analysts" })).toBeVisible();
+  await page.goto("/courses?q=meetings");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("meetings");
+  await expect(page.getByRole("link", { name: "Running Effective Meetings" })).toBeVisible();
 
   await page.goto(`/courses/${FREE_SLUG}`);
   await page.getByRole("link", { name: "Preview this course" }).click();
@@ -76,7 +76,7 @@ test("a student completes a free course and earns a certificate", async ({ page 
   await page.getByRole("button", { name: "Cancel" }).click();
 
   // Notes and Q&A.
-  const note = `Commits are snapshots ${Date.now()}`;
+  const note = `Describe behaviour, not personality ${Date.now()}`;
   await page.getByRole("tab", { name: /Notes/ }).click();
   await page.getByRole("textbox", { name: /New note/ }).fill(note);
   await page.getByRole("button", { name: "Save note" }).click();
@@ -84,11 +84,11 @@ test("a student completes a free course and earns a certificate", async ({ page 
 
   // Quiz: a wrong answer is explained, a retry can pass.
   await page.getByRole("navigation", { name: "Course content" }).getByRole("link", { name: /Quick quiz/ }).click();
-  await page.getByRole("radio", { name: "Only the lines that changed" }).check();
+  await page.getByRole("radio", { name: "The person's personality" }).check();
   await page.getByRole("button", { name: "Submit answers" }).click();
   await expect(page.getByText("You scored 0 out of 1")).toBeVisible();
   await page.getByRole("button", { name: "Try again" }).click();
-  await page.getByRole("radio", { name: "A snapshot of the whole project" }).check();
+  await page.getByRole("radio", { name: "A specific, observable behaviour and its impact" }).check();
   await page.getByRole("button", { name: "Submit answers" }).click();
   await expect(page.getByText("You scored 1 out of 1")).toBeVisible();
 

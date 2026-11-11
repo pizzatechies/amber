@@ -28,6 +28,9 @@ const DAY = 24 * 60 * 60 * 1000;
 export const DEMO_PASSWORD = "amber-demo-1234";
 
 const CATEGORIES = [
+  ["Leadership", "Leading people, teams and organisations."],
+  ["Management", "Running teams, projects and day-to-day operations."],
+  ["Communication", "Feedback, presenting, writing and difficult conversations."],
   ["Development", "Programming, web, mobile and software engineering."],
   ["Data Science", "Analysis, SQL, statistics and machine learning."],
   ["Design", "Visual, product and interaction design."],
@@ -391,8 +394,8 @@ async function seedDemo() {
     data: {
       courseId: featured.id,
       authorId: featured.instructorId,
-      title: "New practice project added",
-      body: "I've added a short practice project at the end of section two. Try it before moving on — it pulls together everything so far.",
+      title: "New exercise: your 30-60-90 day plan",
+      body: "I've added a short planning exercise at the end of section two. Fill it in for your own team before moving on — it pulls together everything so far.",
       createdAt: new Date(now - 5 * DAY),
     },
   });
@@ -408,8 +411,8 @@ async function seedDemo() {
         courseId: featured.id,
         lectureId: firstLecture?.id,
         userId: enrolled[0].userId,
-        title: "Do I need to install anything before starting?",
-        body: "I'm on an older laptop and want to make sure I can follow along.",
+        title: "I was promoted from within the team. How do I handle managing former peers?",
+        body: "Two of my new reports were my closest colleagues last month and it feels awkward.",
         isResolved: true,
         createdAt: new Date(now - 9 * DAY),
       },
@@ -418,7 +421,7 @@ async function seedDemo() {
       data: {
         questionId: question.id,
         userId: featured.instructorId,
-        body: "No — a modern browser and any text editor are enough. Everything in the course runs locally and nothing needs a powerful machine.",
+        body: "Name it early: have an honest one-to-one with each of them about how the relationship changes and what stays the same. The lecture \"Managing former peers\" in section three walks through that conversation.",
         createdAt: new Date(now - 8 * DAY),
       },
     });
@@ -428,7 +431,7 @@ async function seedDemo() {
       data: {
         courseId: featured.id,
         userId: enrolled[1].userId,
-        title: "Is there a recommended order for the practice exercises?",
+        title: "Is there a recommended order for the exercises?",
         body: "Should I do them as they appear, or finish the videos first?",
         createdAt: new Date(now - 1 * DAY),
       },
@@ -438,7 +441,7 @@ async function seedDemo() {
   if (review) {
     await db.review.update({
       where: { id: review.id },
-      data: { reply: "Thank you — glad it was useful. Good luck with your first project!", repliedAt: new Date(now - DAY) },
+      data: { reply: "Thank you — glad it was useful. Good luck with your first 90 days!", repliedAt: new Date(now - DAY) },
     });
   }
 

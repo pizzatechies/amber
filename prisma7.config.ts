@@ -5,7 +5,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    seed: "tsx prisma/seed.ts",
+    seed: "npm run db:seed",
   },
   datasource: {
     // Read leniently so `prisma generate` works at build time without a database.

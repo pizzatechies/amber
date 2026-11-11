@@ -61,13 +61,13 @@ function Hero() {
         {/* Decorative stack of generated covers */}
         <div aria-hidden className="relative mx-auto hidden h-80 w-full max-w-md lg:block">
           <div className="absolute top-2 left-0 w-64 -rotate-6 overflow-hidden rounded-2xl border border-line shadow-pop">
-            <CourseCover title="Design" seed="hero-design-3" />
+            <CourseCover title="Leadership" seed="hero-leadership-2" />
           </div>
           <div className="absolute top-16 right-0 w-64 rotate-3 overflow-hidden rounded-2xl border border-line shadow-pop">
-            <CourseCover title="Business" seed="hero-business-12" />
+            <CourseCover title="Management" seed="hero-management-1" />
           </div>
           <div className="absolute bottom-0 left-16 w-72 -rotate-1 overflow-hidden rounded-2xl border border-line shadow-pop">
-            <CourseCover title="Code" seed="hero-code-5" />
+            <CourseCover title="Communication" seed="hero-communication-4" />
           </div>
         </div>
       </div>
