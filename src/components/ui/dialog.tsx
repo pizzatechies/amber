@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { LoaderCircle, X } from "lucide-react";
 import type { ActionResult } from "@/lib/action-types";
 import { cn } from "@/lib/utils";
@@ -30,27 +30,33 @@ export function Dialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
+  // Set while we close the element ourselves, so that close isn't reported as the user dismissing it.
+  const silentClose = useRef(false);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (open && !el.open) el.showModal();
     if (!open && el.open) el.close();
-  }, [open]);
-
-  // Pages stay mounted (hidden) after navigating away; don't come back to an open dialog.
-  useLayoutEffect(() => {
-    const el = ref.current;
+    // Pages stay mounted (hidden) after navigating away. Take the modal out of
+    // the top layer when that happens; it reopens if the user comes back.
     return () => {
-      if (el?.open) el.close();
+      if (el.open) {
+        silentClose.current = true;
+        el.close();
+      }
     };
-  }, []);
+  }, [open]);
 
   const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" } as const;
 
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={() => {
+        if (silentClose.current) silentClose.current = false;
+        else onClose();
+      }}
       onCancel={(e) => {
         e.preventDefault();
         onClose();

@@ -21,7 +21,7 @@ export function SortSelect({
           const next = options.find((o) => o.value === e.target.value);
           if (next) router.push(next.href);
         }}
-        className="w-auto"
+        className="w-auto!"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

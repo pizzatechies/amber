@@ -278,7 +278,7 @@ function AddLecture({ sectionId, sectionTitle, onCreated }: { sectionId: string;
         if (title.trim()) create.run(sectionId, type, title);
       }}
     >
-      <Select value={type} onChange={(e) => setType(e.target.value as LectureType)} aria-label={`Type of new lecture in ${sectionTitle}`} className="h-9 w-auto">
+      <Select value={type} onChange={(e) => setType(e.target.value as LectureType)} aria-label={`Type of new lecture in ${sectionTitle}`} className="h-9 w-auto!">
         {Object.entries(TYPES).map(([value, t]) => (
           <option key={value} value={value}>
             {t.label}
