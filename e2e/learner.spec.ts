@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectToast, field, signUp } from "./helpers";
+import { field, signUp } from "./helpers";
 
 const PAID = "/courses/web-development-foundations-html-css-and-javascript";
 const FREE_SLUG = "version-control-with-git-in-one-afternoon";
@@ -109,5 +109,7 @@ test("a student completes a free course and earns a certificate", async ({ page 
   await page.goto(`/learn/${FREE_SLUG}?tab=review`);
   await page.getByRole("radio", { name: /^5 stars/ }).click();
   await page.getByRole("button", { name: "Post review" }).click();
-  await expectToast(page, "Thanks for your review!");
+  // Once saved, the form switches to editing the existing review.
+  await expect(page.getByRole("button", { name: "Update review" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Your review" })).toBeVisible();
 });
