@@ -78,6 +78,8 @@ export function UserMenu({ user }: { user: MenuUser }) {
         onSelect={() =>
           startTransition(async () => {
             await signOutAction();
+            // A full page load on purpose: it drops every preserved (hidden) page of the old session.
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             window.location.assign("/");
           })
         }

@@ -33,7 +33,7 @@ export function VideoPlayer({
   const router = useRouter();
   const lastSaved = useRef(0);
   const [failed, setFailed] = useState(false);
-  const [rate, setRate] = useState(1);
+  const rateRef = useRef<HTMLSelectElement>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
 
   const save = useCallback(
@@ -58,13 +58,12 @@ export function VideoPlayer({
     [lectureId, track],
   );
 
-  // Restore the viewer's preferred speed.
+  // Restore the viewer's preferred speed (kept in the browser, so applied after mount).
   useEffect(() => {
     const stored = Number(window.localStorage.getItem(RATE_KEY));
-    if (RATES.includes(stored)) {
-      setRate(stored);
-      if (videoRef.current) videoRef.current.playbackRate = stored;
-    }
+    if (!RATES.includes(stored)) return;
+    if (rateRef.current) rateRef.current.value = String(stored);
+    if (videoRef.current) videoRef.current.playbackRate = stored;
   }, []);
 
   // Record the visit straight away, so "continue learning" points here.
@@ -114,7 +113,6 @@ export function VideoPlayer({
   }, [countdown, next, router]);
 
   function changeRate(value: number) {
-    setRate(value);
     if (videoRef.current) videoRef.current.playbackRate = value;
     window.localStorage.setItem(RATE_KEY, String(value));
   }
@@ -150,7 +148,7 @@ export function VideoPlayer({
           className="size-full bg-black"
           onLoadedMetadata={(e) => {
             const video = e.currentTarget;
-            video.playbackRate = rate;
+            video.playbackRate = Number(rateRef.current?.value) || 1;
             if (startAt > 0 && startAt < video.duration - 3) video.currentTime = startAt;
           }}
           onTimeUpdate={(e) => {
@@ -181,7 +179,8 @@ export function VideoPlayer({
         <label className="flex items-center gap-2">
           Speed
           <select
-            value={rate}
+            ref={rateRef}
+            defaultValue={1}
             onChange={(e) => changeRate(Number(e.target.value))}
             className="rounded-md border border-white/20 bg-ink-2 px-2 py-1 text-paper"
           >
