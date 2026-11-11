@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export type NavItem = { href: string; label: ReactNode; count?: number; exact?: boolean };
@@ -16,8 +16,25 @@ function isActive(pathname: string, item: NavItem, items: NavItem[]): boolean {
 }
 
 /** Horizontal link tabs that highlight the current route. */
-export function NavTabs({ items, label, className }: { items: NavItem[]; label: string; className?: string }) {
-  const pathname = usePathname();
+type TabsProps = { items: NavItem[]; label: string; className?: string };
+
+/**
+ * usePathname() suspends while a page with unknown URL params is prerendered,
+ * so each nav renders once without a highlight as the fallback.
+ */
+export function NavTabs(props: TabsProps) {
+  return (
+    <Suspense fallback={<TabsView {...props} pathname="" />}>
+      <TabsWithPath {...props} />
+    </Suspense>
+  );
+}
+
+function TabsWithPath(props: TabsProps) {
+  return <TabsView {...props} pathname={usePathname()} />;
+}
+
+function TabsView({ items, label, className, pathname }: TabsProps & { pathname: string }) {
   return (
     <nav aria-label={label} className={cn("flex gap-1 overflow-x-auto border-b border-line", className)}>
       {items.map((item) => {
@@ -44,8 +61,21 @@ export function NavTabs({ items, label, className }: { items: NavItem[]; label: 
 }
 
 /** Vertical link list for sidebars. */
-export function NavList({ items, label, className }: { items: Array<NavItem & { icon?: ReactNode }>; label: string; className?: string }) {
-  const pathname = usePathname();
+type ListProps = { items: Array<NavItem & { icon?: ReactNode }>; label: string; className?: string };
+
+export function NavList(props: ListProps) {
+  return (
+    <Suspense fallback={<ListView {...props} pathname="" />}>
+      <ListWithPath {...props} />
+    </Suspense>
+  );
+}
+
+function ListWithPath(props: ListProps) {
+  return <ListView {...props} pathname={usePathname()} />;
+}
+
+function ListView({ items, label, className, pathname }: ListProps & { pathname: string }) {
   return (
     <nav aria-label={label} className={cn("flex flex-col gap-0.5", className)}>
       {items.map((item) => {
