@@ -117,6 +117,20 @@ The build does not need database access. Run one instance unless you move rate l
 
 `GET /api/health` returns 200 when the app can reach the database.
 
+## Static preview (GitHub Pages)
+
+`demo/` holds a read-only snapshot of the demo catalogue: home page, catalogue with search and filters, course pages with a
+playable preview video, and instructor profiles. It needs no server, so GitHub Pages serves it straight from the repo
+(the root `index.html` redirects there). Accounts, purchases and the course player are not part of it.
+
+To refresh it after changing the design or the demo data, build it from a database seeded with the demo data:
+
+```bash
+DATABASE_URL=postgresql://... UPLOAD_DIR=./storage npm run build:static
+```
+
+Then commit the updated `demo/` folder.
+
 ## Development
 
 ```bash
