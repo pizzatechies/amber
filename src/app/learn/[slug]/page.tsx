@@ -6,20 +6,21 @@ import { LinkButton } from "@/components/ui/button";
 import { EmptyState, Skeleton } from "@/components/ui/misc";
 import { getLearnContext, resumeLectureId } from "@/lib/courses/learn";
 import { courseUrl, learnUrl, studioUrl } from "@/lib/urls";
+import { firstParam } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Course player", robots: { index: false } };
 
 export default function LearnIndexPage(props: PageProps<"/learn/[slug]">) {
   return (
     <Suspense fallback={<Skeleton className="m-6 aspect-video" />}>
-      <Resume params={props.params} />
+      <Resume params={props.params} searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
 /** Send the learner to the lecture they should continue with. */
-async function Resume({ params }: Pick<PageProps<"/learn/[slug]">, "params">) {
-  const { slug } = await params;
+async function Resume({ params, searchParams }: Pick<PageProps<"/learn/[slug]">, "params" | "searchParams">) {
+  const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const ctx = await getLearnContext(slug);
   if (!ctx) notFound();
   if (!ctx.access.canLearn) {
@@ -27,7 +28,9 @@ async function Resume({ params }: Pick<PageProps<"/learn/[slug]">, "params">) {
   }
 
   const lectureId = resumeLectureId(ctx);
-  if (lectureId) redirect(learnUrl(slug, lectureId));
+  // Keep ?tab=... so links from notifications open the right tab.
+  const tab = firstParam(sp.tab);
+  if (lectureId) redirect(learnUrl(slug, lectureId) + (tab ? `?tab=${encodeURIComponent(tab)}` : ""));
 
   return (
     <EmptyState

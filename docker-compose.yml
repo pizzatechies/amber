@@ -1,0 +1,38 @@
+# Local setup:   docker compose up --build
+# Database only: docker compose up -d db     (then run the app with `npm run dev`)
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: amber
+      POSTGRES_PASSWORD: amber
+      POSTGRES_DB: amber
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amber"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://amber:amber@db:5432/amber
+      APP_URL: http://localhost:3000
+      # Change these before exposing the site to anyone else.
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: change-me-please
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/data
+
+volumes:
+  db-data:
+  uploads:

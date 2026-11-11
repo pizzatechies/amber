@@ -1,0 +1,29 @@
+# Render blueprint: https://render.com/docs/blueprint-spec
+# Creates a web service with a persistent disk for uploads, and a Postgres database.
+services:
+  - type: web
+    name: amber
+    runtime: docker
+    plan: starter # persistent disks need a paid instance; use S3 storage instead on the free plan
+    healthCheckPath: /api/health
+    disk:
+      name: uploads
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: amber-db
+          property: connectionString
+      - key: APP_URL
+        sync: false # e.g. https://amber.onrender.com
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: sandbox
+
+databases:
+  - name: amber-db
+    plan: basic-256mb

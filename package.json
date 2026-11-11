@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "start:prod": "prisma migrate deploy && npm run db:seed && next start",
+    "start:prod": "prisma migrate deploy && npm run db:seed && next start -p ${PORT:-3000}",
     "postinstall": "prisma generate",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
