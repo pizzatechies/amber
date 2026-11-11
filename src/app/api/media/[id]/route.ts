@@ -1,7 +1,8 @@
 import { Readable } from "node:stream";
 import { getCurrentUser } from "@/lib/auth/session";
 import { readableAsset } from "@/lib/assets";
-import { contentDisposition, parseRange } from "@/lib/http";
+import { contentDisposition } from "@/lib/http";
+import { parseRangeHeader } from "@/lib/range";
 import { storage } from "@/lib/storage";
 import { isInlineType } from "@/lib/storage/files";
 
@@ -44,7 +45,7 @@ export async function GET(request: Request, { params }: Ctx) {
     "X-Content-Type-Options": "nosniff",
   });
 
-  const range = parseRange(request.headers.get("range"), asset.sizeBytes);
+  const range = parseRangeHeader(request.headers.get("range"), asset.sizeBytes);
   if (range === "unsatisfiable") {
     headers.set("Content-Range", `bytes */${asset.sizeBytes}`);
     return new Response(null, { status: 416, headers });

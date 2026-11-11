@@ -1,6 +1,9 @@
 import "server-only";
 import { randomInt } from "node:crypto";
 import { db } from "@/lib/db";
+import { percentOf } from "./progress-math";
+
+export { percentOf };
 
 // ───────────────────────── Reading progress ─────────────────────────
 
@@ -13,11 +16,6 @@ export type CourseProgress = {
   total: number;
   percent: number;
 };
-
-export function percentOf(completed: number, total: number): number {
-  if (total <= 0) return 0;
-  return Math.min(100, Math.floor((completed / total) * 100));
-}
 
 /** A learner's progress through one course, counted over lectures students can see. */
 export async function getCourseProgress(userId: string, courseId: string): Promise<CourseProgress> {
