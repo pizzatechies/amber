@@ -5,8 +5,7 @@
  *
  * Reads published courses from a database seeded with `npm run db:seed:demo`
  * and writes plain HTML, CSS and the preview videos to ./demo. Everything that
- * needs a server (accounts, purchases, the course player) is pointed at the
- * full app instead.
+ * needs a server (accounts, purchases, the course player) is left out.
  */
 import "dotenv/config";
 import { execFileSync } from "node:child_process";
@@ -16,7 +15,7 @@ import path from "node:path";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { BarChart3, Check, ChevronDown, CircleHelp, Clock, ExternalLink, FileText, Globe, Lock, PlayCircle, ScrollText, Search, Users } from "lucide-react";
+import { BarChart3, Check, ChevronDown, CircleHelp, Clock, FileText, Globe, Lock, PlayCircle, ScrollText, Search, Users } from "lucide-react";
 import { PrismaClient } from "@/generated/prisma/client";
 import { CourseCover } from "@/components/course/cover";
 import { Markdown } from "@/components/markdown";
@@ -30,8 +29,6 @@ import { cn, pluralize } from "@/lib/utils";
 
 const OUT = path.resolve(process.env.STATIC_OUT ?? "demo");
 const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR ?? "storage");
-const REPO_URL = process.env.STATIC_REPO_URL ?? "https://github.com/pizzatechies/amber";
-const RUN_URL = `${REPO_URL}#quick-start`;
 const NEW_DAYS = 21;
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
@@ -118,10 +115,7 @@ function Document({ ctx, title, description, children, scripts = [] }: { ctx: Ct
       <body className="flex min-h-full flex-col">
         <div className="bg-info-soft text-sm text-fg">
           <p className="container-page py-2.5 text-center">
-            This is a <strong>static preview</strong> of {site.name}. Accounts, purchases and the course player need the full app.{" "}
-            <a href={RUN_URL} className="font-bold text-info underline underline-offset-2">
-              Run the full app
-            </a>
+            This is a <strong>preview</strong> of {site.name}. Sign-up, purchases and the course player aren&apos;t available here.
           </p>
         </div>
         <Header ctx={ctx} />
@@ -174,8 +168,8 @@ function Header({ ctx }: { ctx: Ctx }) {
           <a href={href.catalog(ctx)} aria-label="Search courses" className="inline-flex size-10 items-center justify-center rounded-full hover:bg-surface-2 sm:hidden">
             <Search className="size-5" aria-hidden />
           </a>
-          <a href={RUN_URL} className={buttonClass({ size: "md" })}>
-            Get the full app
+          <a href={href.catalog(ctx)} className={buttonClass({ size: "md", className: "hidden sm:inline-flex" })}>
+            Browse courses
           </a>
         </div>
       </div>
@@ -192,10 +186,7 @@ function Footer({ ctx }: { ctx: Ctx }) {
           <span className="font-display text-xl font-semibold">{site.name}</span>
         </a>
         <p className="max-w-xl text-sm text-muted">
-          A static snapshot of the demo catalogue. The courses, people and reviews are sample data.{" "}
-          <a href={REPO_URL} className="font-semibold text-brand-text hover:underline">
-            Source code
-          </a>
+          A preview of the course catalogue. The courses, people and reviews are sample data.
         </p>
       </div>
       <div className="border-t border-line">
@@ -386,12 +377,9 @@ function HomePage({ ctx, data, now }: { ctx: Ctx; data: Data; now: number }) {
           <div className="relative z-10 max-w-xl">
             <h2 className="font-display text-3xl font-semibold sm:text-4xl">Know something worth teaching?</h2>
             <p className="mt-3 leading-relaxed text-paper-muted">
-              The full app includes an instructor studio for videos, articles, documents and quizzes, with pricing, coupons, students and
+              {site.name} includes an instructor studio for videos, articles, documents and quizzes, with pricing, coupons, students and
               earnings, plus an admin console for reviewing courses.
             </p>
-            <a href={RUN_URL} className={buttonClass({ size: "lg", className: "mt-7" })}>
-              See how to run it <ExternalLink aria-hidden />
-            </a>
           </div>
           <svg aria-hidden viewBox="0 0 300 300" className="absolute -right-10 -bottom-24 hidden h-96 w-96 md:block">
             <circle cx="150" cy="150" r="150" fill="var(--brand)" />
@@ -541,10 +529,10 @@ function CoursePage({ ctx, course, previewSrc, instructorStats }: { ctx: Ctx; co
       <div className="flex flex-col gap-5 p-6">
         <p className="font-display text-4xl font-semibold">{formatPrice(course.priceCents)}</p>
         <div className="flex flex-col gap-2.5">
-          <a href={RUN_URL} className={buttonClass({ size: "lg" })}>
+          <button type="button" disabled className={buttonClass({ size: "lg" })}>
             {course.priceCents === 0 ? "Enroll for free" : "Add to cart"}
-          </a>
-          <p className="text-center text-xs text-subtle">Enrolling and checkout work in the full app, not in this static preview.</p>
+          </button>
+          <p className="text-center text-xs text-subtle">Enrolling and checkout aren&apos;t available in this preview.</p>
         </div>
         <div>
           <h2 className="text-sm font-bold">This course includes</h2>
