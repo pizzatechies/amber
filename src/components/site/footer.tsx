@@ -52,9 +52,12 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-line">
-        <p className="container-page py-5 text-xs text-subtle">
-          © {site.name}. Courses and materials belong to their instructors.
-        </p>
+        <div className="container-page flex flex-col gap-1 py-5 text-xs text-subtle sm:flex-row sm:justify-between">
+          <p>© {site.name}. Courses and materials belong to their instructors.</p>
+          <p>
+            Developed by <span className="font-semibold text-muted">Pizza Technologies</span>
+          </p>
+        </div>
       </div>
     </footer>
   );

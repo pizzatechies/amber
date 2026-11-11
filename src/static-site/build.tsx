@@ -198,6 +198,11 @@ function Footer({ ctx }: { ctx: Ctx }) {
           </a>
         </p>
       </div>
+      <div className="border-t border-line">
+        <p className="container-page py-5 text-xs text-subtle">
+          Developed by <span className="font-semibold text-muted">Pizza Technologies</span>
+        </p>
+      </div>
     </footer>
   );
 }
