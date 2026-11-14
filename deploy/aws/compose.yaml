@@ -1,0 +1,66 @@
+# Production setup for a single server (for example an AWS EC2 instance).
+# Runs the site, its PostgreSQL database and Caddy, which gets HTTPS
+# certificates automatically. See docs/deploy-aws.md.
+#
+#   cd deploy/aws && cp .env.example .env    # then fill in .env
+#   docker compose up -d --build
+
+name: amber
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: amber
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      POSTGRES_DB: amber
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amber"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # No ports published: only the app can reach the database.
+
+  app:
+    build:
+      context: ../..
+      args:
+        NEXT_PUBLIC_SITE_NAME: ${SITE_NAME:-Amber}
+        NEXT_PUBLIC_CURRENCY: ${CURRENCY:-USD}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # To use Amazon RDS instead of the db service, set DATABASE_URL in .env
+      # and remove the db service above (see the guide).
+      DATABASE_URL: ${DATABASE_URL:-postgresql://amber:${DB_PASSWORD}@db:5432/amber}
+    volumes:
+      - uploads:/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Your domain (e.g. learn.example.com) for automatic HTTPS, or ":80" to
+      # serve plain HTTP on the server's IP address while you test.
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set SITE_ADDRESS in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  uploads:
+  caddy-data:
+  caddy-config:

@@ -107,6 +107,8 @@ Videos are served as uploaded (no transcoding). MP4 with H.264 video and AAC aud
 
 The app is a single Node.js service plus PostgreSQL.
 
+- **AWS (one server)**: follow [docs/deploy-aws.md](docs/deploy-aws.md). It uses `deploy/aws/`, which runs the site,
+  PostgreSQL and Caddy (automatic HTTPS) with one command, and includes a nightly backup script.
 - **Docker**: the `Dockerfile` builds a production image. On start it applies database migrations, runs the base seed and
   serves on `$PORT`. Mount a volume at `/data` for uploads (or use S3).
 - **Render**: `render.yaml` is a blueprint for the web service, a disk and a database.

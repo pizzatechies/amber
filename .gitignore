@@ -54,3 +54,7 @@ next-env.d.ts
 
 # local test output
 /test-results/
+
+# server deployment secrets and backups
+/deploy/aws/.env
+/deploy/aws/backups/
