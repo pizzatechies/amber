@@ -165,7 +165,8 @@ and add this line, which backs up every night at 03:15 and keeps 14 days:
 15 3 * * * /home/ubuntu/amber/deploy/aws/backup.sh >> /home/ubuntu/backup.log 2>&1
 ```
 
-Backups are saved in `~/amber/deploy/aws/backups/`. They are on the same server, so also copy them elsewhere: either
+Run it once by hand to check it works (`~/amber/deploy/aws/backup.sh`); it prints `Backup written: …`. Backups are
+saved in `~/amber/deploy/aws/backups/`. If a backup fails, nothing is deleted and the error goes to `~/backup.log`. They are on the same server, so also copy them elsewhere: either
 download them now and then, or send them to S3 automatically (step 9). Also consider EC2's snapshot schedule (EC2 →
 **Lifecycle Manager**) to back up the whole disk, including uploaded videos.
 
