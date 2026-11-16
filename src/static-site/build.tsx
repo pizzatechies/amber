@@ -21,6 +21,8 @@ import { CourseCover } from "@/components/course/cover";
 import { Markdown } from "@/components/markdown";
 import { buttonClass } from "@/components/ui/button";
 import { Avatar, Badge, Stars } from "@/components/ui/misc";
+import { LogoMark } from "@/components/site/logo";
+import { logoSvg } from "@/components/site/logo-mark";
 import { readQuiz } from "@/lib/courses/quiz";
 import { formatCount, formatDate, formatDuration, formatRating, formatTimecode } from "@/lib/format";
 import { formatPrice } from "@/lib/money";
@@ -128,16 +130,6 @@ function Document({ ctx, title, description, children, scripts = [] }: { ctx: Ct
         ))}
       </body>
     </html>
-  );
-}
-
-function LogoMark({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="9" fill="var(--brand)" />
-      <path d="M16 6.5c.6 4.6 2.6 7 7.5 8.2-4.9 1.2-6.9 3.6-7.5 8.8-.6-5.2-2.6-7.6-7.5-8.8 4.9-1.2 6.9-3.6 7.5-8.2Z" fill="var(--brand-ink)" />
-      <circle cx="23.2" cy="23.6" r="1.7" fill="var(--brand-ink)" />
-    </svg>
   );
 }
 
@@ -840,7 +832,7 @@ async function main() {
     await copyFile(path.join("src/fonts", font), path.join(OUT, "assets", "fonts", font));
   }
   await copyFile("src/static-site/catalog.js", path.join(OUT, "assets", "catalog.js"));
-  await writeFile(path.join(OUT, "assets", "icon.svg"), renderToStaticMarkup(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#f2a31b" /><path d="M16 6.5c.6 4.6 2.6 7 7.5 8.2-4.9 1.2-6.9 3.6-7.5 8.8-.6-5.2-2.6-7.6-7.5-8.8 4.9-1.2 6.9-3.6 7.5-8.2Z" fill="#1d1a16" /></svg>));
+  await writeFile(path.join(OUT, "assets", "icon.svg"), logoSvg());
 
   await writePage("", <HomePage ctx={ctxFor(0)} data={data} now={now} />);
   await writePage("courses", <CatalogPage ctx={ctxFor(1)} data={data} now={now} />);
