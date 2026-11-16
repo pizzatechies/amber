@@ -6,7 +6,7 @@ import { CourseCard, CourseGrid, CourseGridSkeleton } from "@/components/course/
 import { CourseCover } from "@/components/course/cover";
 import { Button, LinkButton } from "@/components/ui/button";
 import { EmptyState, ProgressBar, Skeleton } from "@/components/ui/misc";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, isInstructor } from "@/lib/auth/session";
 import { completedCounts, percentOf } from "@/lib/courses/progress";
 import { getCategories, listCourses } from "@/lib/courses/queries";
 import { db } from "@/lib/db";
@@ -100,15 +100,26 @@ async function HomeSections() {
   ]);
 
   if (popular.length === 0) {
+    // Instructors and admins get a nudge to publish; everyone else a friendly "coming soon".
+    const canTeach = isInstructor(user);
     return (
       <EmptyState
         className="my-16"
         icon={<BookOpen />}
-        title="No courses have been published yet"
-        action={<LinkButton href="/teach">Create the first course</LinkButton>}
+        title={canTeach ? "Publish the first course" : "New courses are coming soon"}
+        action={
+          canTeach ? (
+            <LinkButton href="/instructor/courses/new">Create a course</LinkButton>
+          ) : (
+            <LinkButton href="/teach" variant="outline">
+              Interested in teaching?
+            </LinkButton>
+          )
+        }
       >
-        This is a fresh installation. Publish a course from the instructor studio, or load the demo catalogue with{" "}
-        <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">npm run db:seed:demo</code>.
+        {canTeach
+          ? "The catalogue is empty. Courses you publish from the instructor studio will appear here."
+          : "We're preparing our first courses. Check back soon."}
       </EmptyState>
     );
   }
