@@ -203,7 +203,14 @@ export function RefundButton({ orderId, number, total }: { orderId: string; numb
   );
 }
 
-export function SettingsForm({ settings }: { settings: { requireCourseReview: boolean; instructorSharePercent: number } }) {
+export function SettingsForm({
+  settings,
+  local,
+}: {
+  settings: { requireCourseReview: boolean; instructorSharePercent: number; localCurrencyRate: number };
+  /** Set when local-currency payments (Flutterwave) are configured. */
+  local: { siteCurrency: string; currency: string } | null;
+}) {
   return (
     <ActionForm action={saveSettingsAction} className="flex max-w-xl flex-col gap-6">
       <Checkbox
@@ -222,6 +229,23 @@ export function SettingsForm({ settings }: { settings: { requireCourseReview: bo
         <Input name="instructorSharePercent" type="number" min={0} max={100} defaultValue={settings.instructorSharePercent} required className="max-w-32" />
         <FieldError name="instructorSharePercent" />
       </Field>
+      {local ? (
+        <Field
+          label={`Exchange rate: 1 ${local.siteCurrency} = how many ${local.currency}?`}
+          hint={`Prices are converted at this rate for M-Pesa and mobile-money payments, and rounded up to a whole ${local.currency}. Keep it in line with the market rate. Set to 0 to stop offering local payment.`}
+        >
+          <Input
+            name="localCurrencyRate"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={settings.localCurrencyRate || ""}
+            placeholder="e.g. 129.5"
+            className="max-w-40"
+          />
+          <FieldError name="localCurrencyRate" />
+        </Field>
+      ) : null}
       <SubmitButton className="self-start">Save settings</SubmitButton>
     </ActionForm>
   );

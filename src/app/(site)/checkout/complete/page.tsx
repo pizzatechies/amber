@@ -6,8 +6,8 @@ import { LinkButton } from "@/components/ui/button";
 import { Card, Skeleton } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { closeUnpaidOrder, fulfillOrder } from "@/lib/commerce/orders";
+import { chargeLabel, chargeOf } from "@/lib/commerce/pricing";
 import { db } from "@/lib/db";
-import { formatMoney } from "@/lib/money";
 import { providerFor } from "@/lib/payments";
 import { learnUrl } from "@/lib/urls";
 import { firstParam } from "@/lib/utils";
@@ -34,6 +34,8 @@ async function loadOrder(orderId: string, userId: string) {
       status: true,
       totalCents: true,
       currency: true,
+      chargeAmount: true,
+      chargeCurrency: true,
       provider: true,
       providerRef: true,
       items: { select: { id: true, title: true, course: { select: { slug: true } } } },
@@ -42,7 +44,10 @@ async function loadOrder(orderId: string, userId: string) {
 }
 
 async function OrderStatus({ searchParams }: Pick<PageProps<"/checkout/complete">, "searchParams">) {
-  const orderId = firstParam((await searchParams).order) ?? "";
+  const sp = await searchParams;
+  const orderId = firstParam(sp.order) ?? "";
+  // Gateways that redirect back after a cancel say so in the query string (Flutterwave: status=cancelled).
+  const gatewayStatus = firstParam(sp.status);
   const user = await requireUser(`/checkout/complete?order=${orderId}`);
   let order = await loadOrder(orderId, user.id);
   if (!order) notFound();
@@ -51,16 +56,25 @@ async function OrderStatus({ searchParams }: Pick<PageProps<"/checkout/complete"
   // its webhook has not reached us yet.
   if (order.status === "PENDING" && order.providerRef) {
     try {
-      const state = await providerFor(order.provider)?.confirm(order);
+      const charge = chargeOf(order);
+      const state = await providerFor(order.provider)?.confirm({
+        id: order.id,
+        providerRef: order.providerRef,
+        totalCents: charge.amount,
+        currency: charge.currency,
+      });
       if (state === "paid") await fulfillOrder(order.id);
       if (state === "failed") await closeUnpaidOrder(order.id, "FAILED");
-      if (state === "paid" || state === "failed") order = (await loadOrder(orderId, user.id)) ?? order;
+      // The buyer cancelled on the gateway's page and nothing was paid. (A later
+      // payment on a cancelled order is still honoured by fulfillOrder.)
+      if (state === "pending" && gatewayStatus === "cancelled") await closeUnpaidOrder(order.id, "CANCELED");
+      order = (await loadOrder(orderId, user.id)) ?? order;
     } catch (err) {
       console.error("[checkout] could not confirm payment:", err);
     }
   }
 
-  const total = formatMoney(order.totalCents, order.currency);
+  const total = chargeLabel(order);
 
   if (order.status === "PAID") {
     return (

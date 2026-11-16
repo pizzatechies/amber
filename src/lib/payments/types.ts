@@ -1,9 +1,11 @@
+/** An order as sent to a gateway. Amounts are what the gateway should charge, in minor units. */
 export type CheckoutOrder = {
   id: string;
   number: number;
   totalCents: number;
   currency: string;
   buyerEmail: string;
+  buyerName: string;
   items: Array<{ title: string; priceCents: number }>;
 };
 
@@ -27,5 +29,5 @@ export interface PaymentProvider {
   /** Abandon an unpaid checkout so it can no longer be completed. Best effort. */
   cancel(order: { providerRef: string }): Promise<void>;
   /** Return the buyer's money for a paid order. Throws if the gateway refuses. */
-  refund(order: { id: string; providerRef: string; totalCents: number }): Promise<void>;
+  refund(order: { id: string; providerRef: string; totalCents: number; currency: string }): Promise<void>;
 }

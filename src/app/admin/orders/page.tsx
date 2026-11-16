@@ -36,7 +36,7 @@ async function Orders({ searchParams }: Pick<PageProps<"/admin/orders">, "search
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       select: {
-        id: true, number: true, status: true, totalCents: true, currency: true, provider: true, createdAt: true,
+        id: true, number: true, status: true, totalCents: true, currency: true, chargeAmount: true, chargeCurrency: true, provider: true, createdAt: true,
         user: { select: { name: true, email: true } },
         items: { select: { id: true, title: true } },
       },
@@ -50,6 +50,7 @@ async function Orders({ searchParams }: Pick<PageProps<"/admin/orders">, "search
         <Table head={["Order", "Buyer", "Courses", "Date", "Total", "Status", ""]}>
           {orders.map((o) => {
             const amount = formatMoney(o.totalCents, o.currency);
+            const charged = o.chargeCurrency && o.chargeCurrency !== o.currency ? formatMoney(o.chargeAmount, o.chargeCurrency) : null;
             return (
               <tr key={o.id}>
                 <td className="font-semibold whitespace-nowrap">#{o.number}</td>
@@ -61,12 +62,13 @@ async function Orders({ searchParams }: Pick<PageProps<"/admin/orders">, "search
                 <td className="whitespace-nowrap text-muted">{formatDate(o.createdAt)}</td>
                 <td className="whitespace-nowrap">
                   {amount}
+                  {charged ? <span className="block text-xs text-muted">charged {charged}</span> : null}
                   <span className="block text-xs text-subtle">{o.provider}</span>
                 </td>
                 <td>
                   <Badge tone={ORDER_STATUS[o.status]!.tone}>{ORDER_STATUS[o.status]!.label}</Badge>
                 </td>
-                <td className="text-right">{o.status === "PAID" ? <RefundButton orderId={o.id} number={o.number} total={amount} /> : null}</td>
+                <td className="text-right">{o.status === "PAID" ? <RefundButton orderId={o.id} number={o.number} total={charged ?? amount} /> : null}</td>
               </tr>
             );
           })}

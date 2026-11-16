@@ -4,9 +4,10 @@ import { refreshEnrollmentCount } from "@/lib/courses/stats";
 import { db } from "@/lib/db";
 import { appUrl } from "@/lib/env";
 import { mails, sendMail } from "@/lib/mail";
-import { formatMoney, shareOf } from "@/lib/money";
+import { shareOf } from "@/lib/money";
 import { notify } from "@/lib/notify";
-import { payments, providerFor } from "@/lib/payments";
+import { chargeFor, paymentMethods, providerFor, type PaymentMethodId } from "@/lib/payments";
+import { chargeLabel, chargeOf } from "./pricing";
 import { getSettings } from "@/lib/settings";
 import { site } from "@/lib/site";
 import { getCart } from "./cart";
@@ -16,14 +17,21 @@ import { grantEnrollment } from "./enroll";
  * Turn the user's cart into an order and begin payment.
  * Returns the URL to send the buyer to next.
  */
-export async function checkoutCart(user: { id: string; email: string }): Promise<string> {
+export async function checkoutCart(
+  user: { id: string; email: string; name: string },
+  methodId: PaymentMethodId = "card",
+): Promise<string> {
   const cart = await getCart(user.id, Date.now());
   if (cart.purchasable.length === 0) {
     throw new ActionError("There is nothing in your cart to check out.");
   }
   const { instructorSharePercent } = await getSettings();
-  const provider = payments();
+  const method = (await paymentMethods()).find((m) => m.id === methodId);
+  if (!method) throw new ActionError("That payment method isn't available. Please choose another.");
+  const provider = method.provider;
   const isFree = cart.totals.totalCents === 0;
+  const charge = chargeFor(method, cart.totals.totalCents);
+  if (!isFree && charge.amount <= 0) throw new ActionError("That payment method isn't available. Please choose another.");
 
   // Only one open order at a time: abandon any earlier unpaid checkout.
   const stale = await db.order.findMany({
@@ -42,6 +50,8 @@ export async function checkoutCart(user: { id: string; email: string }): Promise
       subtotalCents: cart.totals.subtotalCents,
       discountCents: cart.totals.discountCents,
       totalCents: cart.totals.totalCents,
+      chargeAmount: isFree ? 0 : charge.amount,
+      chargeCurrency: isFree ? site.currency : charge.currency,
       provider: isFree ? "none" : provider.id,
       items: {
         create: cart.purchasable.map((line) => ({
@@ -65,7 +75,17 @@ export async function checkoutCart(user: { id: string; email: string }): Promise
   }
 
   try {
-    const started = await provider.startCheckout({ ...order, buyerEmail: user.email });
+    // Gateways charge the converted amount; per-item prices are only sent when no conversion applies.
+    const converted = charge.currency !== order.currency;
+    const started = await provider.startCheckout({
+      id: order.id,
+      number: order.number,
+      totalCents: charge.amount,
+      currency: charge.currency,
+      buyerEmail: user.email,
+      buyerName: user.name,
+      items: converted ? order.items.map((i) => ({ title: i.title, priceCents: 0 })) : order.items,
+    });
     await db.order.update({ where: { id: order.id }, data: { providerRef: started.providerRef } });
     return started.redirectUrl;
   } catch (err) {
@@ -98,6 +118,8 @@ export async function fulfillOrder(orderId: string): Promise<boolean> {
         number: true,
         totalCents: true,
         currency: true,
+        chargeAmount: true,
+        chargeCurrency: true,
         userId: true,
         user: { select: { name: true, email: true } },
         items: { select: { courseId: true, couponId: true, title: true, instructorId: true } },
@@ -132,7 +154,7 @@ export async function fulfillOrder(orderId: string): Promise<boolean> {
   await sendMail(
     mails.orderReceipt(order.user.email, order.user.name, {
       number: order.number,
-      total: formatMoney(order.totalCents, order.currency),
+      total: chargeLabel(order),
       items: order.items.map((i) => i.title),
       link: appUrl("/my-learning"),
     }),
@@ -160,6 +182,9 @@ export async function refundOrder(orderId: string): Promise<void> {
       provider: true,
       providerRef: true,
       totalCents: true,
+      currency: true,
+      chargeAmount: true,
+      chargeCurrency: true,
       items: { select: { courseId: true, title: true } },
     },
   });
@@ -170,7 +195,8 @@ export async function refundOrder(orderId: string): Promise<void> {
     const provider = providerFor(order.provider);
     if (!provider) throw new ActionError(`Unknown payment provider "${order.provider}".`);
     try {
-      await provider.refund({ id: order.id, providerRef: order.providerRef, totalCents: order.totalCents });
+      const charge = chargeOf(order);
+      await provider.refund({ id: order.id, providerRef: order.providerRef, totalCents: charge.amount, currency: charge.currency });
     } catch (err) {
       console.error("[orders] refund failed:", err);
       throw new ActionError("The payment provider rejected the refund. Nothing was changed.");

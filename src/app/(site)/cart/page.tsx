@@ -12,7 +12,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getCart } from "@/lib/commerce/cart";
 import { formatDuration } from "@/lib/format";
 import { formatMoney, formatPrice } from "@/lib/money";
-import { payments } from "@/lib/payments";
+import { chargeFor, paymentMethods } from "@/lib/payments";
 import { requestTime } from "@/lib/request";
 import { courseUrl } from "@/lib/urls";
 import { pluralize } from "@/lib/utils";
@@ -39,7 +39,7 @@ export default function CartPage() {
 async function CartContent() {
   const user = await requireUser("/cart");
   const cart = await getCart(user.id, await requestTime());
-  const provider = payments();
+  const methods = await paymentMethods();
 
   if (cart.lines.length === 0) {
     return (
@@ -134,14 +134,43 @@ async function CartContent() {
           </dl>
 
           {cart.purchasable.length > 0 ? (
-            <ActionButton action={checkoutAction} size="lg" className="w-full">
-              {isFree ? "Enroll now" : "Proceed to checkout"}
-            </ActionButton>
+            isFree || methods.length === 1 ? (
+              <ActionButton action={checkoutAction.bind(null, "card")} size="lg" className="w-full">
+                {isFree ? "Enroll now" : "Proceed to checkout"}
+              </ActionButton>
+            ) : (
+              <div className="flex flex-col gap-2.5" role="group" aria-label="Choose how to pay">
+                <p className="text-sm font-bold">Choose how to pay</p>
+                {methods.map((method, index) => {
+                  const charge = chargeFor(method, totals.totalCents);
+                  return (
+                    <ActionButton
+                      key={method.id}
+                      action={checkoutAction.bind(null, method.id)}
+                      size="lg"
+                      variant={index === 0 ? "primary" : "outline"}
+                      className="h-auto w-full flex-col items-start gap-0.5 py-2.5 text-left whitespace-normal"
+                    >
+                      <span className="flex w-full items-baseline justify-between gap-3">
+                        <span>{method.label}</span>
+                        <span className="tabular-nums">{formatMoney(charge.amount, charge.currency)}</span>
+                      </span>
+                      <span className="text-xs font-normal opacity-80">{method.description}</span>
+                    </ActionButton>
+                  );
+                })}
+                {methods.some((m) => m.local) ? (
+                  <p className="text-xs text-subtle">
+                    Local amounts are converted from {formatMoney(totals.totalCents)} and rounded up to a whole unit.
+                  </p>
+                ) : null}
+              </div>
+            )
           ) : (
             <Alert tone="warn">Nothing in your cart can be purchased right now.</Alert>
           )}
 
-          {provider.isTestMode && !isFree ? (
+          {methods.some((m) => m.provider.isTestMode) && !isFree ? (
             <p className="flex gap-2 rounded-lg bg-info-soft px-3 py-2.5 text-xs leading-relaxed text-info">
               <FlaskConical className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               <span className="text-fg">

@@ -5,6 +5,7 @@ import { Receipt } from "lucide-react";
 import { LinkButton } from "@/components/ui/button";
 import { Badge, EmptyState, Skeleton } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
+import { chargeLabel } from "@/lib/commerce/pricing";
 import { ORDER_STATUS } from "@/lib/commerce/status";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
@@ -34,6 +35,8 @@ async function Purchases() {
       totalCents: true,
       discountCents: true,
       currency: true,
+      chargeAmount: true,
+      chargeCurrency: true,
       createdAt: true,
       items: { select: { id: true, title: true, priceCents: true, couponCode: true, course: { select: { slug: true } } } },
     },
@@ -60,7 +63,7 @@ async function Purchases() {
               </p>
               <div className="flex items-center gap-3">
                 <Badge tone={status.tone}>{status.label}</Badge>
-                <span className="font-bold">{formatMoney(order.totalCents, order.currency)}</span>
+                <span className="font-bold">{chargeLabel(order)}</span>
               </div>
             </div>
             <ul className="divide-y divide-line">

@@ -491,7 +491,12 @@ model Order {
   subtotalCents Int
   discountCents Int         @default(0)
   totalCents    Int
-  /// Payment provider id ("sandbox", "stripe", or "none" for zero-total orders).
+  /// What the payment provider actually charged, in minor units of chargeCurrency.
+  /// Equals totalCents/currency unless the order was paid in a local currency
+  /// (e.g. KES via Flutterwave), converted at the admin-set exchange rate.
+  chargeAmount   Int    @default(0)
+  chargeCurrency String @default("")
+  /// Payment provider id ("sandbox", "stripe", "flutterwave", or "none" for zero-total orders).
   provider      String
   /// Provider-side reference (e.g. Stripe Checkout Session id).
   providerRef   String      @default("")

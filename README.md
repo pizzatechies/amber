@@ -88,6 +88,12 @@ For Stripe, set `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHO
 Stripe pointing at `/api/webhooks/stripe` for the `checkout.session.*` events. The Stripe integration has not been run
 against Stripe itself yet: do a full purchase and refund with test keys before going live.
 
+**Flutterwave (M-Pesa and mobile money).** Set `FLUTTERWAVE_SECRET_KEY` and `FLUTTERWAVE_WEBHOOK_HASH`, point a webhook
+in the Flutterwave dashboard at `/api/webhooks/flutterwave` with the same secret hash, and set the exchange rate in
+Admin → Settings. Buyers then choose between card and M-Pesa at checkout. Prices stay in the site currency; Flutterwave
+charges the converted amount in `FLUTTERWAVE_CURRENCY` (default `KES`), rounded up to a whole unit, and each order
+records exactly what was charged. Payments are only unlocked after re-checking the transaction with Flutterwave.
+
 To add another gateway, implement the `PaymentProvider` interface in `src/lib/payments/types.ts` and register it in
 `src/lib/payments/index.ts`.
 

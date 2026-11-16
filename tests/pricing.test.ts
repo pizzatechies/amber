@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { couponProblem, normalizeCouponCode, priceLine, sumLines, type CouponInfo } from "@/lib/commerce/pricing";
+import { chargeLabel, chargeOf, convertCharge, couponProblem, normalizeCouponCode, priceLine, sumLines, type CouponInfo } from "@/lib/commerce/pricing";
 import { applyPercentOff, formatMoney, formatPrice, parseAmount, shareOf, toAmountInput } from "@/lib/money";
 
 const NOW = Date.UTC(2026, 0, 15);
@@ -90,5 +90,35 @@ describe("money", () => {
   it("round-trips through the form input format", () => {
     expect(toAmountInput(2450, "USD")).toBe("24.50");
     expect(parseAmount(toAmountInput(2450, "USD"), "USD")).toBe(2450);
+  });
+});
+
+describe("local-currency charges", () => {
+  it("converts and rounds up to a whole unit", () => {
+    // 49.99 USD × 129.5 = 6473.705 KES → 6474 KES
+    expect(convertCharge(4999, "USD", "KES", 129.5)).toBe(647400);
+    expect(convertCharge(1000, "USD", "KES", 130)).toBe(130000);
+    // Float noise must not add a unit: 0.1 × 3 = 0.30000000000000004
+    expect(convertCharge(10, "USD", "KES", 30)).toBe(300);
+  });
+
+  it("handles currencies without minor units", () => {
+    // 49.99 × 3700.4 = 184982.996 UGX → 184983 (UGX has no minor unit)
+    expect(convertCharge(4999, "USD", "UGX", 3700.4)).toBe(184983);
+  });
+
+  it("refuses to convert without a rate", () => {
+    expect(convertCharge(4999, "USD", "KES", 0)).toBe(0);
+    expect(convertCharge(0, "USD", "KES", 129.5)).toBe(0);
+  });
+
+  it("labels converted orders with both amounts", () => {
+    const order = { totalCents: 4999, currency: "USD", chargeAmount: 647400, chargeCurrency: "KES" };
+    expect(chargeOf(order)).toEqual({ amount: 647400, currency: "KES" });
+    expect(chargeLabel(order).replace(/ /g, " ")).toBe("KES 6,474.00 ($49.99)");
+    const plain = { totalCents: 4999, currency: "USD", chargeAmount: 4999, chargeCurrency: "USD" };
+    expect(chargeLabel(plain)).toBe("$49.99");
+    // Orders created before this field existed have no charge currency.
+    expect(chargeOf({ totalCents: 4999, currency: "USD", chargeAmount: 0, chargeCurrency: "" })).toEqual({ amount: 4999, currency: "USD" });
   });
 });

@@ -35,6 +35,18 @@ const schema = z
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
+    // Flutterwave (mobile money and African cards). Offered alongside the card
+    // provider above whenever a secret key is set.
+    FLUTTERWAVE_SECRET_KEY: z.string().optional(),
+    FLUTTERWAVE_WEBHOOK_HASH: z.string().optional(),
+    FLUTTERWAVE_CURRENCY: z
+      .string()
+      .regex(/^[A-Za-z]{3}$/, "FLUTTERWAVE_CURRENCY must be a 3-letter currency code")
+      .default("KES")
+      .transform((v) => v.toUpperCase()),
+    /** Comma-separated Flutterwave payment_options; defaults depend on the currency. */
+    FLUTTERWAVE_PAYMENT_OPTIONS: z.string().optional(),
+
     SMTP_URL: z.string().optional(),
     MAIL_FROM: z.string().default("Amber <no-reply@example.com>"),
   })

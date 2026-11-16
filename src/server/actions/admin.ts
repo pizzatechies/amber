@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { appUrl } from "@/lib/env";
 import { mails, sendMail } from "@/lib/mail";
 import { notify } from "@/lib/notify";
-import { saveSettings } from "@/lib/settings";
+import { getSettings, saveSettings } from "@/lib/settings";
 import { courseUrl, studioUrl } from "@/lib/urls";
 import { slugify } from "@/lib/utils";
 import { idSchema, text } from "@/lib/validation";
@@ -197,15 +197,22 @@ export async function refundOrderAction(orderId: string): Promise<ActionResult> 
 const settingsFormSchema = z.object({
   requireCourseReview: z.string().optional(),
   instructorSharePercent: z.coerce.number().int("Enter a whole number.").min(0, "Enter 0 to 100.").max(100, "Enter 0 to 100."),
+  localCurrencyRate: z.coerce
+    .number("Enter a number, e.g. 129.5")
+    .min(0, "The rate can't be negative.")
+    .max(1_000_000, "That rate is too large.")
+    .optional(),
 });
 
 export async function saveSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
   return run(async () => {
     await actionAdmin();
     const input = parse(settingsFormSchema, formValues(formData));
+    const current = await getSettings();
     await saveSettings({
       requireCourseReview: input.requireCourseReview === "on",
       instructorSharePercent: input.instructorSharePercent,
+      localCurrencyRate: input.localCurrencyRate ?? current.localCurrencyRate,
     });
     refresh();
     return ok("Settings saved.");

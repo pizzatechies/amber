@@ -165,12 +165,13 @@ export async function removeCouponAction(courseId: string): Promise<ActionResult
 }
 
 /** Create an order from the cart and send the buyer to pay for it. */
-export async function checkoutAction(): Promise<ActionResult> {
+export async function checkoutAction(method: "card" | "local" = "card"): Promise<ActionResult> {
   return run(async () => {
     const user = await actionUser();
     const limit = rateLimit(`checkout:${user.id}`, 20, 10 * 60 * 1000);
     if (!limit.ok) throw new ActionError("Too many checkout attempts. Please wait a few minutes and try again.");
-    redirect(await checkoutCart(user));
+    const chosen = parse(z.enum(["card", "local"]), method);
+    redirect(await checkoutCart(user, chosen));
   });
 }
 
